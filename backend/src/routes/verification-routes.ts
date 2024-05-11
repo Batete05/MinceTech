@@ -4,5 +4,5 @@ import { Router } from 'express';
 
 // TODO: add verification
 export default createRouter((router: Router) => {
-  router.post('/', handleVerifyVerifcation);
+  router.post('/:id', handleVerifyVerifcation);
 });
