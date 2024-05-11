@@ -21,7 +21,7 @@ type HttpErrorCode =
   | 'EXPECTATION_FAILED'
   | 'TEAPOT';
 
-type BackendErrorCode = 'VALIDATION_ERROR' | 'USER_NOT_FOUND' | 'INVALID_PASSWORD';
+type BackendErrorCode = 'VALIDATION_ERROR' | 'USER_NOT_FOUND' | 'INVALID_PASSWORD' | 'EXPIRED';
 
 type ErrorCode = HttpErrorCode | BackendErrorCode | 'INTERNAL_ERROR';
 

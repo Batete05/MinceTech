@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { mw as requestIp } from 'request-ip';
 import { logger } from './utils/logger';
 import './utils/env';
+import { setupMqtt } from '@/utils/mqtt';
 
 const { PORT } = process.env;
 
@@ -51,5 +52,6 @@ app.all('*', handle404Error);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
+  setupMqtt();
   consola.info(`Server running at http://localhost:${PORT}`);
 });

@@ -21,6 +21,9 @@ const configSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_REGION: z.string(),
   JWT_SECRET: z.string(),
+  MQTT_BROKER: z.string(),
+  MQTT_USERNAME:z.string(),
+  MQTT_PASSWORD:z.string()
 });
 
 try {

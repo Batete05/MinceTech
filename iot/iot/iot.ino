@@ -13,8 +13,8 @@
 #include <WiFiClientSecure.h>
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
-int statuss = 0;
-int out = 0;
+// int statuss = 0;
+// int out = 0;
 
 const char* ssid = "RCA-WiFii";
 const char* password = "@rca@2023";
