@@ -2,23 +2,122 @@
  *  Created by TheCircuit
 */
 
-#define SS_PIN 4  //D2
-#define RST_PIN 5 //D1
+#define RST_PIN 0        // Configurable, see typical pin layout above
+#define SS_PIN 15        // Configurable, see typical pin layout above
 
 #include <SPI.h>
 #include <MFRC522.h>
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <WiFiClientSecure.h>
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 int statuss = 0;
 int out = 0;
+
+const char* ssid = "RCA-WiFii";
+const char* password = "@rca@2023";
+const char* mqtt_server = "1773c28db0b74ababe2fcd70c4dc659c.s1.eu.hivemq.cloud";
+const int mqtt_port = 8883;
+const char* mqtt_username = "hivemq.webclient.1715433554249";
+const char* mqtt_password = "!5N8*Z,c7kG3TxqB.bdU";
+
+static const char* root_ca PROGMEM = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
+TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
+cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4
+WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu
+ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY
+MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc
+h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+
+0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U
+A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW
+T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH
+B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC
+B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv
+KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn
+OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn
+jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw
+qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI
+rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV
+HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq
+hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL
+ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ
+3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK
+NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5
+ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur
+TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC
+jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc
+oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq
+4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA
+mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
+emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
+-----END CERTIFICATE-----
+)EOF";
+
+WiFiClientSecure espClient;
+PubSubClient client(espClient);
+
+void setup_wifi() {
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect("ESP8266Client", mqtt_username, mqtt_password)) {
+      Serial.println("connected");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
 void setup() 
 {
-  Serial.begin(9600);   // Initiate a serial communication
+  Serial.begin(115200);   // Initiate a serial communication
   SPI.begin();      // Initiate  SPI bus
   mfrc522.PCD_Init();   // Initiate MFRC522
+  // setup wifi
+  setup_wifi();
+
+  #ifdef ESP8266
+    espClient.setInsecure();
+  #else
+    espClient.setCACert(root_ca);  // enable this line and the the "certificate" code for secure connection
+  #endif
+    client.setServer(mqtt_server, mqtt_port);
 }
+
 void loop() 
 {
+  if (!client.connected()) {
+      reconnect();
+  }
   // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) 
   {
@@ -43,98 +142,16 @@ void loop()
   }
   content.toUpperCase();
   Serial.println();
-  if (content.substring(1) == "8E 39 32 50") //change UID of the card that you want to give access
-  {
-    Serial.println(" Access Granted ");
-    Serial.println(" Welcome Mr.Circuit ");
-    delay(1000);
-    Serial.println(" Have FUN ");
-    Serial.println();
-    statuss = 1;
-  }
-  
-  else   {
-    Serial.println(" Access Denied ");
-    delay(3000);
-  }
+  JsonDocument jsonObject;
+  // Add data to JSON object
+  jsonObject["uid"] = content.substring(1); 
+  // Convert JSON object to string
+  String jsonString;
+  serializeJson(jsonObject, jsonString);
+
+  // Publish JSON string to MQTT topic
+  client.publish("iot/uid", jsonString.c_str());
+  delay(100);
 } 
 
 
-
-// #include <SPI.h>
-// #include <MFRC522.h>
-// #include <ESP8266WiFi.h>
-// #include <ESP8266HTTPClient.h>
-// #include <WiFiClient.h>
-
-// #define SS_PIN  15 // GPIO15 corresponds to D8 on NodeMCU
-// #define RST_PIN  4 // GPIO4 corresponds to D2 on NodeMCU
-
-// MFRC522 rfid(SS_PIN, RST_PIN);
-// const char* ssid = "RCA";
-// const char* password = "@RcaNyabihu2023";
-
-// String serverName = "https://jsonplaceholder.typicode.com/posts";
-
-// void setup() {
-//   Serial.begin(9600);
-//   SPI.begin(); // init SPI bus
-//   rfid.PCD_Init(); // init MFRC522
-
-//   Serial.println("Tap an RFID/NFC tag on the RFID-RC522 reader");
-//   WiFi.begin(ssid, password);
-//   Serial.println("Connecting");
-//   while(WiFi.status() != WL_CONNECTED) {
-//     delay(500);
-//     Serial.print(".");
-//   }
-//   Serial.println("");
-//   Serial.print("Connected to WiFi network");
-// }
-
-// void send_notification() {
-//   if(WiFi.status()== WL_CONNECTED){
-//       WiFiClient client;
-//       HTTPClient http;
-
-//       // Your Domain name with URL path or IP address with path
-//       http.begin(client, serverName);
-
-//       // If you need Node-RED/server authentication, insert user and password below
-//       //http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
-//       http.addHeader("Content-Type", "application/json; charset=UTF-8");
-//       int httpResponseCode = http.POST("{\"api_key\":\"tPmAT5Ab3j7F9\"}");
-
-//       Serial.print("HTTP Response code: ");
-//       Serial.println(httpResponseCode);
-
-//       // Free resources
-//       http.end();
-//     }
-//     else {
-//       Serial.println("WiFi Disconnected");
-//     }
-// }
-
-// void loop() {
-//   // send_notification();
-//   // delay(2000);
-//   if (rfid.PICC_IsNewCardPresent()) { // new tag is available
-//     if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
-//       MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-//       Serial.print("RFID/NFC Tag Type: ");
-//       Serial.println(rfid.PICC_GetTypeName(piccType));
-
-//       // print UID in Serial Monitor in the hex format
-//       Serial.print("UID:");
-//       for (int i = 0; i < rfid.uid.size; i++) {
-//         Serial.print(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
-//         Serial.print(rfid.uid.uidByte[i], HEX);
-//       }
-//       Serial.println();
-
-//       rfid.PICC_HaltA(); // halt PICC
-//       rfid.PCD_StopCrypto1(); // stop encryption on PCD
-//     }
-//   }
-// }
