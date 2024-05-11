@@ -36,3 +36,4 @@ try {
 }
 
 export type Env = z.infer<typeof configSchema>;
+export const db_url = process.env.DB_URL

@@ -1,12 +1,14 @@
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import drizzleConfig from '../drizzle.config';
-import postgres from 'postgres';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import 'dotenv/config';
+import "dotenv/config";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import pg from "pg";
+import drizzleConfig from "../drizzle.config";
 
 const main = async () => {
-  const connection = postgres(process.env.DB_URL, { max: 1 });
-
+  // const connection = postgres(process.env.DB_URL, { max: 1 });
+  const connection = new pg.Client({
+    connectionString: process.env.DB_URL,
+  });
   // This will run migrations on the database, skipping the ones already applied
   await migrate(drizzle(connection), { migrationsFolder: drizzleConfig.out });
 

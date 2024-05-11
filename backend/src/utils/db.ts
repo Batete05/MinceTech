@@ -1,4 +1,14 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { db_url } from "@/utils/env";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
 
-export const db = drizzle(postgres(process.env.DB_URL));
+
+const pool = new pg.Pool({
+  connectionString: db_url,
+});
+
+export const db = drizzle(pool, {
+  logger: true,
+});
+
+

@@ -40,7 +40,7 @@
       },
       "suspicious": {
         "recommended": false,
-        "noConsoleLog": "error",
+        "noConsoleLog": "warn",
         "noDuplicateCase": "error",
         "noDuplicateClassMembers": "error",
         "noDuplicateJsxProps": "error",
