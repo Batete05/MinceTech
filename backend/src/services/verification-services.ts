@@ -3,6 +3,7 @@ import {
   type NewVerification,
   type UpdateVerification,
 } from "@/schema/verification";
+import { updateCardBalance } from "@/services/card-services";
 import { db } from "@/utils/db";
 import { BackendError } from "@/utils/errors";
 import { eq } from "drizzle-orm";
@@ -16,6 +17,7 @@ export const verifyVerification = async (data: UpdateVerification) => {
     const verification = await db
       .select({
         expiresAt: verifications.expiresAt,
+        uid: verifications.uid,
       })
       .from(verifications)
       .where(eq(verifications.id, data.id));
@@ -24,6 +26,7 @@ export const verifyVerification = async (data: UpdateVerification) => {
       const parsedExpiryDate = new Date(verification[0]?.expiresAt);
       const isExpired = currentDate > parsedExpiryDate;
       if (!isExpired) {
+        await updateCardBalance(verification[0].uid, 1000);
         return await db
           .update(verifications)
           .set(data)

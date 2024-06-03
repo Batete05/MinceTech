@@ -1,19 +1,28 @@
-import { users, type NewUser, type UpdateUser, type User } from '@/schema/user';
-import { db } from '@/utils/db';
-import { sendVerificationEmail } from '@/utils/email';
-import { BackendError } from '@/utils/errors';
-import { sha256 } from '@/utils/hash';
-import argon2 from 'argon2';
-import crypto from 'crypto';
-import { eq } from 'drizzle-orm';
+import { users, type NewUser, type UpdateUser, type User } from "@/schema/user";
+import { createCard } from "@/services/card-services";
+import { db } from "@/utils/db";
+import { sendVerificationEmail } from "@/utils/email";
+import { BackendError } from "@/utils/errors";
+import { sha256 } from "@/utils/hash";
+import argon2 from "argon2";
+import crypto from "crypto";
+import { eq } from "drizzle-orm";
 
 export const getUserByUserId = async (userId: string) => {
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
   return user;
 };
 
 export const getUserByEmail = async (email: string) => {
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
   return user;
 };
 
@@ -21,7 +30,7 @@ export const addUser = async (user: NewUser) => {
   const { password, ...userDetails } = user;
 
   const salt = crypto.randomBytes(32);
-  const code = crypto.randomBytes(32).toString('hex');
+  const code = crypto.randomBytes(32).toString("hex");
   const hashedPassword = await argon2.hash(password, {
     salt,
   });
@@ -31,7 +40,7 @@ export const addUser = async (user: NewUser) => {
     .values({
       ...userDetails,
       password: hashedPassword,
-      salt: salt.toString('hex'),
+      salt: salt.toString("hex"),
       code,
     })
     .returning({
@@ -44,32 +53,43 @@ export const addUser = async (user: NewUser) => {
     });
 
   if (!newUser) {
-    throw new BackendError('INTERNAL_ERROR', {
-      message: 'Failed to add user',
+    throw new BackendError("INTERNAL_ERROR", {
+      message: "Failed to add user",
     });
   }
-
+  await createCard({
+    balance: 150000,
+    user_id: newUser.id,
+    name: "DOLAPA EMERY",
+    number: "1111 2222 3333 4444",
+    type: "PERSONAL",
+    uid: ''
+  });
   return { user: newUser, code };
 };
 
 export const verifyUser = async (email: string, code: string) => {
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
 
   if (!user) {
-    throw new BackendError('USER_NOT_FOUND');
+    throw new BackendError("USER_NOT_FOUND");
   }
 
   if (user.isVerified) {
-    throw new BackendError('CONFLICT', {
-      message: 'User already verified',
+    throw new BackendError("CONFLICT", {
+      message: "User already verified",
     });
   }
 
   const isVerified = sha256.verify(code, user.code);
 
   if (!isVerified) {
-    throw new BackendError('UNAUTHORIZED', {
-      message: 'Invalid verification code',
+    throw new BackendError("UNAUTHORIZED", {
+      message: "Invalid verification code",
     });
   }
 
@@ -80,8 +100,8 @@ export const verifyUser = async (email: string, code: string) => {
     .returning({ id: users.id });
 
   if (!updatedUser) {
-    throw new BackendError('INTERNAL_ERROR', {
-      message: 'Failed to verify user',
+    throw new BackendError("INTERNAL_ERROR", {
+      message: "Failed to verify user",
     });
   }
 };
@@ -90,19 +110,25 @@ export const deleteUser = async (email: string) => {
   const user = await getUserByEmail(email);
 
   if (!user) {
-    throw new BackendError('USER_NOT_FOUND');
+    throw new BackendError("USER_NOT_FOUND");
   }
 
-  const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning({
-    id: users.id,
-    name: users.name,
-    email: users.email,
-  });
+  const [deletedUser] = await db
+    .delete(users)
+    .where(eq(users.email, email))
+    .returning({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+    });
 
   return deletedUser;
 };
 
-export const updateUser = async (user: User, { name, email, password }: UpdateUser) => {
+export const updateUser = async (
+  user: User,
+  { name, email, password }: UpdateUser
+) => {
   let code: string | undefined;
   let hashedCode: string | undefined;
 
@@ -110,13 +136,13 @@ export const updateUser = async (user: User, { name, email, password }: UpdateUs
     const user = await getUserByEmail(email);
 
     if (user) {
-      throw new BackendError('CONFLICT', {
-        message: 'Email already in use',
+      throw new BackendError("CONFLICT", {
+        message: "Email already in use",
         details: { email },
       });
     }
 
-    code = crypto.randomBytes(32).toString('hex');
+    code = crypto.randomBytes(32).toString("hex");
     hashedCode = sha256.hash(code);
   }
 
@@ -140,8 +166,8 @@ export const updateUser = async (user: User, { name, email, password }: UpdateUs
     });
 
   if (!updatedUser) {
-    throw new BackendError('USER_NOT_FOUND', {
-      message: 'User could not be updated',
+    throw new BackendError("USER_NOT_FOUND", {
+      message: "User could not be updated",
     });
   }
 
@@ -160,8 +186,8 @@ export const updateUser = async (user: User, { name, email, password }: UpdateUs
         .set({ email: user.email, isVerified: user.isVerified })
         .where(eq(users.email, updatedUser.email))
         .returning();
-      throw new BackendError('BAD_REQUEST', {
-        message: 'Email could not be updated',
+      throw new BackendError("BAD_REQUEST", {
+        message: "Email could not be updated",
       });
     }
   }

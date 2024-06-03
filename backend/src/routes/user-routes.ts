@@ -2,6 +2,7 @@ import {
   handleAddUser,
   handleDeleteUser,
   handleGetUser,
+  handleGetUserByEmail,
   handleUpdateUser,
   handleUserLogin,
   handleVerifyUser,
@@ -12,6 +13,7 @@ import { Router } from 'express';
 
 export default createRouter((router: Router) => {
   router.get('/', authenticate(), handleGetUser);
+  router.get('/email/:email', handleGetUserByEmail);
   router.get('/verify', (req, res, next) => handleVerifyUser(req, res, next));
   router.post('/create', handleAddUser);
   router.post('/login', handleUserLogin);
