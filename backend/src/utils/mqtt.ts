@@ -1,5 +1,5 @@
 import { createVerification } from "@/services/verification-services";
-import { sendVerificationNotification } from "@/utils/pusher";
+import { notifyVerification, sendVerificationNotification } from "@/utils/pusher";
 import mqtt from "mqtt";
 
 const options: mqtt.IClientOptions = {
@@ -47,7 +47,8 @@ export function setupMqtt() {
           });
           console.log("created verification", res[0]?.id);
           if (res.length > 0 && res[0]) {
-            sendVerificationNotification(res[0]);
+            await sendVerificationNotification(res[0]);
+            await notifyVerification(res[0])
             console.log("verification notification sent", res[0]?.id);
           }
         }
