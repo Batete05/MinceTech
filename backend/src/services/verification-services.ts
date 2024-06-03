@@ -46,6 +46,6 @@ export const verifyVerification = async (data: UpdateVerification) => {
   }
 };
 
-export const getVerifications = async (id: string) => {
-  return db.select().from(verifications).where(eq(verifications.id, id));
+export const getVerifications = async () => {
+  return db.select().from(verifications);
 };

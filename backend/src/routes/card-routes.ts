@@ -3,5 +3,5 @@ import { createRouter } from "@/utils/create";
 import type { Router } from "express";
 
 export default createRouter((router: Router) => {
-  router.get('/card/:id', getCardDataByUserIdController);
+  router.get('/:id', getCardDataByUserIdController);
 });
