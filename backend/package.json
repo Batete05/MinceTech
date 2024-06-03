@@ -2,7 +2,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/server.ts --bundle --outfile=build/server.js --platform=node --format=esm --packages=external",
+    "build": "./esbuild src/server.ts --bundle --outfile=build/server.js --platform=node --format=esm --packages=external",
     "start": "node build/server.js",
     "dev": "nodemon",
     "dev:tsc": "tsc --watch --preserveWatchOutput",

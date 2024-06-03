@@ -1,24 +1,38 @@
-import type { InferSelectModel } from 'drizzle-orm';
-import { boolean, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { createSelectSchema } from 'drizzle-zod';
-import { z } from 'zod';
+import { cards } from "@/schema/card";
+import { relations, type InferSelectModel } from "drizzle-orm";
+import {
+  boolean,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
-export const users = pgTable('users', {
-  id: uuid('id').notNull().primaryKey().defaultRandom(),
-  name: varchar('name', { length: 255 }).notNull(),
-  email: text('email').notNull().unique(),
-  isAdmin: boolean('is_admin').notNull().default(false),
-  password: text('password').notNull(),
-  isVerified: boolean('is_verified').notNull().default(false),
-  salt: text('salt').notNull(),
-  code: text('code').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+export const users = pgTable("users", {
+  id: uuid("id").notNull().primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: text("email").notNull().unique(),
+  isAdmin: boolean("is_admin").notNull().default(false),
+  password: text("password").notNull(),
+  isVerified: boolean("is_verified").notNull().default(false),
+  salt: text("salt").notNull(),
+  code: text("code").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const usersRelations = relations(users, ({ one }) => ({
+  card: one(cards),
+}));
+
 export const selectUserSchema = createSelectSchema(users, {
-  email: schema =>
-    schema.email.email().regex(/^([a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6})*$/i),
+  email: (schema) =>
+    schema.email
+      .email()
+      .regex(/^([a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6})*$/i),
 });
 
 export const verifyUserSchema = z.object({
@@ -68,5 +82,5 @@ export const newUserSchema = z.object({
 });
 
 export type User = InferSelectModel<typeof users>;
-export type NewUser = z.infer<typeof newUserSchema>['body'];
-export type UpdateUser = z.infer<typeof updateUserSchema>['body'];
+export type NewUser = z.infer<typeof newUserSchema>["body"];
+export type UpdateUser = z.infer<typeof updateUserSchema>["body"];
