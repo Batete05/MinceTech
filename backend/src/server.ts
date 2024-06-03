@@ -8,6 +8,7 @@ import { mw as requestIp } from 'request-ip';
 import { logger } from './utils/logger';
 import './utils/env';
 import { setupMqtt } from '@/utils/mqtt';
+import { init } from '@/utils/hadcode';
 
 const { PORT } = process.env;
 
@@ -53,5 +54,6 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   setupMqtt();
+  init();
   consola.info(`Server running at http://localhost:${PORT}`);
 });
