@@ -16,8 +16,8 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 // int statuss = 0;
 // int out = 0;
 
-const char* ssid = "Benax-WiFi(2.4G)";
-const char* password = "Rc@Nyabihu2023";
+const char* ssid = "warner";
+const char* password = "warner@edudu";
 const char* mqtt_server = "1773c28db0b74ababe2fcd70c4dc659c.s1.eu.hivemq.cloud";
 const int mqtt_port = 8883;
 const char* mqtt_username = "hivemq.webclient.1715433554249";

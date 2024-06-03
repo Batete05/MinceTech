@@ -14,7 +14,7 @@ export const statusEnum = pgEnum("status", ["ACCEPTED", "DECLINED"]);
 
 export const verifications = pgTable("verifications", {
   id: uuid("id").notNull().primaryKey().defaultRandom(),
-  uid: varchar("uid").notNull(),
+  uid: varchar("uid", { length: 256 }).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   isVerified: boolean("is_verified").default(false),
   status: statusEnum("status"),

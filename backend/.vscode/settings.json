@@ -49,4 +49,13 @@
     "editor.formatOnSave": false
   },
   "typescript.tsdk": "node_modules/typescript/lib",
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "driver": "PostgreSQL",
+      "name": "rfipay",
+      "connectString": "postgresql://postgres:fidele95@localhost:5432/rfipay"
+    }
+  ],
 }

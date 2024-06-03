@@ -63,7 +63,7 @@ export const addUser = async (user: NewUser) => {
     name: "DOLAPA EMERY",
     number: "1111 2222 3333 4444",
     type: "PERSONAL",
-    uid: ''
+    uid: '83 46 B0 FC'
   });
   return { user: newUser, code };
 };

@@ -1,5 +1,4 @@
-import { cards } from "@/schema/card";
-import { relations, type InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel } from "drizzle-orm";
 import {
   boolean,
   pgTable,
@@ -23,10 +22,6 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
-
-export const usersRelations = relations(users, ({ one }) => ({
-  card: one(cards),
-}));
 
 export const selectUserSchema = createSelectSchema(users, {
   email: (schema) =>
